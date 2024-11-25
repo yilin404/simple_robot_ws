@@ -1,0 +1,23 @@
+<launch>
+    <arg name="hand_type" default="Right" />
+    <arg name="retarget_config_path" default="$(find simple_hand_teleop)/configs/dex_retargeting/a1arm_gripper_teleop_vr.yml"/>
+
+    <arg name="joint_state_topic_name" default="/joint_states_host" />
+    <arg name="curobo_config_file_path" default="/home/yilin/dataset/robot_description/a1arm_description/a1arm.yml" />
+    <arg name="arm_joint_position_control_topic_name" default="/arm_joint_target_position"/>
+    <arg name="gripper_joint_position_control_topic_name" default="/gripper_position_control_host"/>
+
+    <arg name="episode_save_path" default="/home/yilin/dataset/own_episode_data/raw_data/pick_and_place" />
+
+    <node name="teleop_vr_node" pkg="simple_hand_teleop" type="teleop_vr_node.py" output="screen">
+        <param name="hand_type" value="$(arg hand_type)" />
+        <param name="retarget_config_path" value="$(arg retarget_config_path)" />
+
+        <param name="joint_state_topic_name" value="$(arg joint_state_topic_name)" />
+        <param name="curobo_config_file_path" value="$(arg curobo_config_file_path)" />
+        <param name="arm_joint_position_control_topic_name" value="$(arg arm_joint_position_control_topic_name)" />
+        <param name="gripper_joint_position_control_topic_name" value="$(arg gripper_joint_position_control_topic_name)" />
+
+        <param name="episode_save_path" value="$(arg episode_save_path)" />
+    </node>
+</launch>
