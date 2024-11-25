@@ -101,11 +101,11 @@ class ArmDriverWrapper:
         self.lock = Lock()
         # 机械臂关节状态
         self.is_curr_qpos_initialized = False
-        self.curr_qpos = np.ndarray((8,), dtype=np.float64)
+        self.curr_qpos = np.ndarray((7,), dtype=np.float64)
         self.is_curr_qvel_initialized = False
-        self.curr_qvel = np.ndarray((8,), dtype=np.float64)
+        self.curr_qvel = np.ndarray((7,), dtype=np.float64)
         self.is_curr_torque_initialized = False
-        self.curr_torque = np.ndarray((8,), dtype=np.float64)
+        self.curr_torque = np.ndarray((7,), dtype=np.float64)
         self.joint_state_sub = rospy.Subscriber(cfg.joint_state_topic_name, JointState, self.joint_state_cb, queue_size=1000)
         # 机械臂关节位置控制
         self.is_arm_joint_position_target_initialized = False
@@ -123,7 +123,7 @@ class ArmDriverWrapper:
         while not rospy.is_shutdown():
             if self.is_arm_joint_position_target_initialized and self.is_curr_qpos_initialized:
                 with self.lock:
-                    q_curr = self.curr_qpos[:-2].copy()
+                    q_curr = self.curr_qpos[:-1].copy()
                     q_target = self.arm_joint_position_target.copy()
 
                 delta_q = np.clip(q_target - q_curr, a_min=-0.1, a_max=0.1)

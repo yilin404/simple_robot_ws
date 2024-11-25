@@ -70,12 +70,10 @@ def main():
                 action = action.cpu().numpy()
 
             # 控制机器人运动
-            for i in range(len(action)):
-                print(action[i])
-                driver_wrapper.command_arm_joint_position(action[i, :-1])
-                driver_wrapper.command_gripper_joint_position(action[i, -1])
+            driver_wrapper.command_arm_joint_position(action[0, :-1])
+            driver_wrapper.command_gripper_joint_position(action[0, -1])
 
-                time.sleep(1. / 30.)
+            time.sleep(1. / 30.)
 
         # 绘制并显示realsense图像, 捕获键盘输入
         img_display = cv2.hconcat(realsense_wrapper.color_images)
