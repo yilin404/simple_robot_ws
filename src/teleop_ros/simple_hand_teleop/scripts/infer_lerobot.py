@@ -8,16 +8,16 @@ import einops
 import torch
 
 import time
-import pygame
 
 from lerobot.common.policies.diffusion.modeling_diffusion import DiffusionPolicy
+from lerobot.common.policies.act.modeling_act import ACTPolicy
 
 from lib.arm_driver_wrapper import ArmDriverWrapper, ArmDriverWrapperCfg
 from lib.realsense_wrapper import RealSenseWrapper, RealSenseWrapperCfg
 
 def main():
-    rospy.init_node("Eval_Lerobot_node", anonymous=True)
-    rospy.loginfo("==> Start Eval Lerobot node...")
+    rospy.init_node("Infer_Lerobot_node", anonymous=True)
+    rospy.loginfo("==> Start Infer Lerobot node...")
     
     driver_wrapper_cfg = ArmDriverWrapperCfg(joint_state_topic_name=rospy.get_param("~joint_state_topic_name"),
                                              curobo_config_file_path=rospy.get_param("~curobo_config_file_path"),
@@ -34,12 +34,10 @@ def main():
     controlling = False
     
     policy_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    policy = DiffusionPolicy.from_pretrained(rospy.get_param("~pretrained_policy_path"))
+    # policy = DiffusionPolicy.from_pretrained(rospy.get_param("~pretrained_policy_path"))
+    policy = ACTPolicy.from_pretrained(rospy.get_param("~pretrained_policy_path"))
     policy.to(policy_device)
     policy.reset()
-
-    pygame.init()
-    screen = pygame.display.set_mode((1280, 480))
 
     while not rospy.is_shutdown():
         # 获取realsense图像
@@ -76,34 +74,26 @@ def main():
             time.sleep(1. / 30.)
 
         # 绘制并显示realsense图像, 捕获键盘输入
-        img_display = cv2.hconcat(realsense_wrapper.color_images)
-        img_surface = pygame.surfarray.make_surface(cv2.cvtColor(img_display, cv2.COLOR_BGR2RGB).transpose(1, 0, 2))
-        screen.blit(img_surface, (0, 0))
-        pygame.display.update()
-        pygame.time.wait(1)  # 延迟1毫秒
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                exit()
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_q:
-                    driver_wrapper.command_arm_ee_pose(arm_ee_position=np.array([0., 0.2, 0.3], dtype=np.float32),
-                                                       arm_ee_quaternion=np.array([0.707, 0.707, 0., 0.], dtype=np.float32))
-                    driver_wrapper.command_gripper_joint_position(0.03)
-                    time.sleep(3.)
+        cv2.imshow("realsense_image", cv2.hconcat(realsense_wrapper.color_images))
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('q'):
+            driver_wrapper.command_arm_ee_pose(arm_ee_position=np.array([0., 0.2, 0.3], dtype=np.float32),
+                                               arm_ee_quaternion=np.array([0.707, 0.707, 0., 0.], dtype=np.float32))
+            driver_wrapper.command_gripper_joint_position(0.03)
+            time.sleep(3.)
                     
-                    controlling = False
-                    print("==> End controlling...")
-                elif event.key == pygame.K_c:
-                    driver_wrapper.command_arm_ee_pose(arm_ee_position=np.array([0., 0.2, 0.3], dtype=np.float32),
-                                                       arm_ee_quaternion=np.array([0.707, 0.707, 0., 0.], dtype=np.float32))
-                    driver_wrapper.command_gripper_joint_position(0.03)
-                    time.sleep(3.)
+            controlling = False
+            print("==> End controlling...")
+        elif key == ord('c'):
+            driver_wrapper.command_arm_ee_pose(arm_ee_position=np.array([0., 0.2, 0.3], dtype=np.float32),
+                                               arm_ee_quaternion=np.array([0.707, 0.707, 0., 0.], dtype=np.float32))
+            driver_wrapper.command_gripper_joint_position(0.03)
+            time.sleep(3.)
                     
-                    controlling = True
-                    print("==> Start controlling...")
-                else:
-                    pass
+            controlling = True
+            print("==> End controlling...")
+        else:
+            pass
 
 if __name__ == "__main__":
     main()
