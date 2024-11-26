@@ -13,6 +13,8 @@ from lib.wrist_pose_tracker_wrapper import WristPoseTrackerWrapper, WristPoseTra
 from lib.realsense_wrapper import RealSenseWrapper, RealSenseWrapperCfg
 from lib.episode_writer import EpisodeWriter
 
+from termcolor import colored
+
 def main():
     rospy.init_node("TeleOp_RGBD_node", anonymous=True)
     rospy.loginfo("==> Start TeleOp RGBD node...")
@@ -108,6 +110,9 @@ def main():
                                             pointclouds={"camera_top": realsense_wrapper.point_clouds[0]},
                                             states={"arm": {"qpos": qpos_curr.tolist(), "qvel": qvel_curr.tolist(), "torque": torque_curr.tolist()}},
                                             actions={"arm": {"qpos": qpos_target.tolist()}})
+        else:
+            if controlling:
+                print(colored("Fail to get wrist pose and hand qpos...", "yellow", attrs=["bold"]))
 
 if __name__ == "__main__":
     main()
