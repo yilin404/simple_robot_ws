@@ -88,7 +88,7 @@ class ArmDriverWrapperCfg:
     gripper_joint_position_control_topic_name: str
 
 class ArmDriverWrapper:
-    JOINT_MAX_DELTA: float = 0.2
+    JOINT_MAX_DELTA: float = 0.1
     def __init__(self, cfg: ArmDriverWrapperCfg) -> None:
         super().__init__()
 
