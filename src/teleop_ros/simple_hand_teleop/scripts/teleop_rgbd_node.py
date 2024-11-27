@@ -35,8 +35,8 @@ def main():
     wrist_position_prev = None
     wrist_quaternion_prev = None
     
-    realsense_wrapper_cfg = RealSenseWrapperCfg(names=["camera_top", "camera_wrist"],
-                                                sns=["238222073566", "238222071769"],
+    realsense_wrapper_cfg = RealSenseWrapperCfg(names=["camera_top", "camera_wrist", "camera_left"],
+                                                sns=["238222073566", "238222071769", "238322071831"],
                                                 color_shape=(640, 480), depth_shape=(640, 480),
                                                 fps=60, timeout_ms=30)
     realsense_wrapper = RealSenseWrapper(cfg=realsense_wrapper_cfg)
@@ -66,14 +66,14 @@ def main():
                 wrist_position_prev = wrist_position
                 wrist_quaternion_prev = wrist_quaternion
 
-            # 获取realsense图像,
-            realsense_wrapper.get_frames()
+            # 获取realsense图像
+            color_images, depth_images, point_clouds = realsense_wrapper.get_frames()
 
             # 获取当前机械臂状态信息
             qpos_curr, qvel_curr, torque_curr = wrist_pose_tracker_wrapper.get_arm_states()
 
             # 绘制并显示realsense图像, 捕获键盘输入
-            cv2.imshow("relasense_image", cv2.hconcat(realsense_wrapper.color_images))
+            cv2.imshow("relasense_image", cv2.hconcat(color_images))
             key = cv2.waitKey(1) & 0xFF
             if key == ord('q'):
                 wrist_pose_tracker_wrapper.reset()
@@ -104,10 +104,11 @@ def main():
                 success, qpos_target = wrist_pose_tracker_wrapper(wrist_position, wrist_quaternion, hand_qpos)
 
                 if recording and success:
-                    episode_writer.add_item(colors={"camera_top": realsense_wrapper.color_images[0],
-                                                    "camera_wrist": realsense_wrapper.color_images[1]},
-                                            depths={"camera_top": realsense_wrapper.depth_images[0]},
-                                            pointclouds={"camera_top": realsense_wrapper.point_clouds[0]},
+                    episode_writer.add_item(colors={"camera_top": color_images[0],
+                                                    "camera_wrist": color_images[1],
+                                                    "camera_right": color_images[2]},
+                                            depths={"camera_top": depth_images[0]},
+                                            pointclouds={"camera_top": point_clouds[0]},
                                             states={"arm": {"qpos": qpos_curr.tolist(), "qvel": qvel_curr.tolist(), "torque": torque_curr.tolist()}},
                                             actions={"arm": {"qpos": qpos_target.tolist()}})
         else:

@@ -4,6 +4,8 @@ import numpy as np
 import open3d as o3d
 import time
 
+import threading
+
 from dataclasses import dataclass
 from typing import List
 
@@ -64,34 +66,51 @@ class RealSenseWrapper:
                     print(f"{name} waited too long: {time.time() - t}s\n\n")
                     raise Exception
 
-        self.color_images = []
-        self.depth_images = []
-        self.point_clouds = []
+        # 初始化共享内存和锁
+        self.lock = threading.Lock()
+
+        # 使用 numpy 的共享内存方式
+        self.color_images_array = np.zeros((len(self.cfg.names), cfg.color_shape[1], cfg.color_shape[0], 3), dtype=np.uint8)
+        self.depth_images_array = np.zeros((len(self.cfg.names), cfg.depth_shape[1], cfg.depth_shape[0]), dtype=np.uint16)
+        self.point_clouds_list = [None] * len(self.cfg.names)
+
+        """启动多进程捕获图像"""
+        self.threads = []
+        for camera_index in range(len(self.cfg.names)):
+            t = threading.Thread(target=self._get_frame_thread, args=(camera_index,))
+            t.daemon = True
+            self.threads.append(t)
+            t.start()
+
+            print(f"==> Start RealSense GetFrame Thread {camera_index}")
 
         print("==> RealSenseWrapper initial successfully...")
 
-    def get_frames(self):
-        self.color_images.clear(), self.depth_images.clear(), self.point_clouds.clear()
-
-        for name, pipe in zip(self.cfg.names, self.pipes):
+    def _get_frame_thread(self, camera_index: int):
+        while True:
+            pipe = self.pipes[camera_index]
+            
             try:
                 frameset = pipe.wait_for_frames(timeout_ms=self.cfg.timeout_ms)
                 aligned_frameset = self.align.process(frameset)  # 对齐深度图和彩色图
+
+                color_frame = aligned_frameset.get_color_frame()
+                depth_frame = aligned_frameset.get_depth_frame()
+
+                with self.lock:
+                    self.color_images_array[camera_index] = np.array(color_frame.get_data())
+                    self.depth_images_array[camera_index] = np.array(depth_frame.get_data())
+                    self.point_clouds_list[camera_index] = self._depth_to_point_cloud(self.depth_images_array[camera_index], depth_frame.profile.as_video_stream_profile().intrinsics)
+                
+                time.sleep(1e-2)
             except:
-                print(f"==> {name} failed...")
-                [pipe.stop() for pipe in self.pipes]
-                break
-            
-            color_frame = aligned_frameset.get_color_frame()
-            depth_frame = aligned_frameset.get_depth_frame()
+                pass
 
-            color_image = np.array(color_frame.get_data())
-            depth_image = np.array(depth_frame.get_data())
-            point_cloud = self._depth_to_point_cloud(depth_image, depth_frame.profile.as_video_stream_profile().intrinsics)
+            time.sleep(5e-3)
 
-            self.color_images.append(color_image)
-            self.depth_images.append(depth_image)
-            self.point_clouds.append(point_cloud)
+    def get_frames(self):
+        with self.lock:
+            return self.color_images_array.copy(), self.depth_images_array.copy(), self.point_clouds_list.copy()
 
     def _depth_to_point_cloud(self, depth_image, intrinsic):
         # Create Open3D Image from depth map

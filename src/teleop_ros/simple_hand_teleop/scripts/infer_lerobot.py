@@ -25,8 +25,8 @@ def main():
                                              gripper_joint_position_control_topic_name=rospy.get_param("~gripper_joint_position_control_topic_name"))
     driver_wrapper = ArmDriverWrapper(cfg=driver_wrapper_cfg)
 
-    realsense_wrapper_cfg = RealSenseWrapperCfg(names=["camera_top", "camera_wrist"],
-                                                sns=["238222073566", "238222071769"],
+    realsense_wrapper_cfg = RealSenseWrapperCfg(names=["camera_top", "camera_wrist", "camera_left"],
+                                                sns=["238222073566", "238222071769", "238322071831"],
                                                 color_shape=(640, 480), depth_shape=(640, 480),
                                                 fps=60, timeout_ms=30)
     realsense_wrapper = RealSenseWrapper(cfg=realsense_wrapper_cfg)
@@ -52,7 +52,8 @@ def main():
                 observation = {}
 
                 imgs = {"observation.images.colors_camera_top": torch.from_numpy(realsense_wrapper.color_images[0]).to(policy_device),
-                        "observation.images.colors_camera_wrist": torch.from_numpy(realsense_wrapper.color_images[1]).to(policy_device),}
+                        "observation.images.colors_camera_wrist": torch.from_numpy(realsense_wrapper.color_images[1]).to(policy_device),
+                        "observation.images.colors_camera_right": torch.from_numpy(realsense_wrapper.color_images[2]).to(policy_device),}
                 for imgkey, img in imgs.items():
                     # convert to channel first of type float32 in range [0,1]
                     img = einops.rearrange(img.unsqueeze(0), "b h w c -> b c h w").contiguous()
