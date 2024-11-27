@@ -39,7 +39,7 @@ def main():
     realsense_wrapper_cfg = RealSenseWrapperCfg(names=["camera_top", "camera_wrist", "camera_left"],
                                                 sns=["238222073566", "238222071769", "238322071831"],
                                                 color_shape=(640, 480), depth_shape=(640, 480),
-                                                fps=60, timeout_ms=30)
+                                                fps=30, timeout_ms=50)
     realsense_wrapper = RealSenseWrapper(cfg=realsense_wrapper_cfg)
 
     controlling = False
