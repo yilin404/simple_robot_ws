@@ -74,7 +74,7 @@ class RealSenseWrapper:
         self.depth_images_array = np.zeros((len(self.cfg.names), cfg.depth_shape[1], cfg.depth_shape[0]), dtype=np.uint16)
         self.point_clouds_list = [None] * len(self.cfg.names)
 
-        """启动多进程捕获图像"""
+        """启动多线程捕获图像"""
         self.threads = []
         for camera_index in range(len(self.cfg.names)):
             t = threading.Thread(target=self._get_frame_thread, args=(camera_index,))

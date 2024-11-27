@@ -46,6 +46,8 @@ def main():
     recording = False
     press_key_s_count = 0
     episode_writer = EpisodeWriter(rospy.get_param("~episode_save_path"))
+    
+    failedIKCnt = 0
 
     while not rospy.is_shutdown():
         # 获取手腕姿态(对应机械臂末端姿态)和机械臂手掌关节
@@ -102,6 +104,9 @@ def main():
             if controlling:
                 # 机械臂控制
                 success, qpos_target = wrist_pose_tracker_wrapper(wrist_position, wrist_quaternion, hand_qpos)
+                if not success:
+                    print(colored(f"Fail to solve IK...Cnt: {failedIKCnt}", "red", attrs=["bold"]))
+                    failedIKCnt += 1
 
                 if recording and success:
                     episode_writer.add_item(colors={"camera_top": color_images[0],

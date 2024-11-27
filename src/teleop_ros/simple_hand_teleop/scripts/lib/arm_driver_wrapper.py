@@ -111,7 +111,7 @@ class ArmDriverWrapper:
         self.is_arm_joint_position_target_initialized = False
         self.arm_joint_position_target = np.ndarray((6,), dtype=np.float64)
         self.arm_joint_position_target_pub = rospy.Publisher(cfg.arm_joint_position_control_topic_name, JointState, queue_size=100)
-        self.arm_joint_position_target_pub_freq = 400
+        self.arm_joint_position_target_pub_freq = 300
         self.arm_joint_position_target_pub_thread = Thread(target=self._pub_arm_joint_position_target)
         self.arm_joint_position_target_pub_thread.start()
 
@@ -121,13 +121,11 @@ class ArmDriverWrapper:
     # 单独线程, 不断发布机械臂关节位置期望
     def _pub_arm_joint_position_target(self) -> None:
         while not rospy.is_shutdown():
+            start_time = time.perf_counter()
             if self.is_arm_joint_position_target_initialized and self.is_curr_qpos_initialized:
                 with self.lock:
-                    q_curr = self.curr_qpos[:-1].copy()
-                    q_target = self.arm_joint_position_target.copy()
-
-                delta_q = np.clip(q_target - q_curr, a_min=-0.1, a_max=0.1)
-                q_target = q_curr + delta_q
+                    delta_q = np.clip(self.arm_joint_position_target - self.curr_qpos[:-1], a_min=-0.2, a_max=0.2)
+                    q_target = self.curr_qpos[:-1] + delta_q
 
                 joint_target = JointState()
                 joint_target.header.stamp = rospy.Time.now()
@@ -136,7 +134,8 @@ class ArmDriverWrapper:
 
                 self.arm_joint_position_target_pub.publish(joint_target)
         
-            time.sleep(1. / self.arm_joint_position_target_pub_freq)
+            time.sleep(1. / self.arm_joint_position_target_pub_freq - (time.perf_counter() - start_time))
+            print(time.perf_counter() - start_time)
     
     def command_arm_joint_position(self, arm_joint_position: Sequence[float]) -> None:
         with self.lock:
