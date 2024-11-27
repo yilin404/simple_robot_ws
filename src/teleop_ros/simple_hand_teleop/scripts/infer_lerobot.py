@@ -41,7 +41,7 @@ def main():
 
     while not rospy.is_shutdown():
         # 获取realsense图像
-        realsense_wrapper.get_frames()
+        color_images, depth_images, point_clouds = realsense_wrapper.get_frames()
 
         # 获取当前机械臂状态信息
         qpos_curr, qvel_curr, torque_curr = driver_wrapper.get_arm_states()
@@ -51,9 +51,9 @@ def main():
                 # 计算机器人动作
                 observation = {}
 
-                imgs = {"observation.images.colors_camera_top": torch.from_numpy(realsense_wrapper.color_images[0]).to(policy_device),
-                        "observation.images.colors_camera_wrist": torch.from_numpy(realsense_wrapper.color_images[1]).to(policy_device),
-                        "observation.images.colors_camera_right": torch.from_numpy(realsense_wrapper.color_images[2]).to(policy_device),}
+                imgs = {"observation.images.colors_camera_top": torch.from_numpy(color_images[0]).to(policy_device),
+                        "observation.images.colors_camera_wrist": torch.from_numpy(color_images[1]).to(policy_device),
+                        "observation.images.colors_camera_right": torch.from_numpy(color_images[2]).to(policy_device),}
                 for imgkey, img in imgs.items():
                     # convert to channel first of type float32 in range [0,1]
                     img = einops.rearrange(img.unsqueeze(0), "b h w c -> b c h w").contiguous()
@@ -75,7 +75,7 @@ def main():
             time.sleep(1. / 30.)
 
         # 绘制并显示realsense图像, 捕获键盘输入
-        cv2.imshow("realsense_image", cv2.hconcat(realsense_wrapper.color_images))
+        cv2.imshow("realsense_image", cv2.hconcat(color_images))
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
             driver_wrapper.command_arm_ee_pose(arm_ee_position=np.array([0., 0.2, 0.3], dtype=np.float32),
