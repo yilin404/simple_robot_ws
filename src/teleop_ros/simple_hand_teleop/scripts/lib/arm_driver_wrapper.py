@@ -121,7 +121,6 @@ class ArmDriverWrapper:
     # 单独线程, 不断发布机械臂关节位置期望
     def _pub_arm_joint_position_target(self) -> None:
         while not rospy.is_shutdown():
-            start_time = time.perf_counter()
             if self.is_arm_joint_position_target_initialized and self.is_curr_qpos_initialized:
                 with self.lock:
                     delta_q = np.clip(self.arm_joint_position_target - self.curr_qpos[:-1], a_min=-0.2, a_max=0.2)
@@ -134,8 +133,7 @@ class ArmDriverWrapper:
 
                 self.arm_joint_position_target_pub.publish(joint_target)
         
-            time.sleep(1. / self.arm_joint_position_target_pub_freq - (time.perf_counter() - start_time))
-            print(time.perf_counter() - start_time)
+            time.sleep(1. / self.arm_joint_position_target_pub_freq)
     
     def command_arm_joint_position(self, arm_joint_position: Sequence[float]) -> None:
         with self.lock:
