@@ -45,7 +45,6 @@ class WristPoseTrackerWrapper:
             wrist_rot = R.from_quat(wrist_quaternion)
             
             # 计算手腕位姿的增量
-            # delta_wrist_pos = self.cfg.transform_matrix @ (wrist_pos - self.wrist_position_initial)
             delta_wrist_pos = R.from_quat(self.wrist_quaternion_initial).inv().apply(self.cfg.delta_position_scale * (wrist_pos - self.wrist_position_initial))
             delta_wrist_rot =  R.from_quat(self.wrist_quaternion_initial).inv() * wrist_rot
 

@@ -88,6 +88,7 @@ class ArmDriverWrapperCfg:
     gripper_joint_position_control_topic_name: str
 
 class ArmDriverWrapper:
+    JOINT_MAX_DELTA: float = 0.2
     def __init__(self, cfg: ArmDriverWrapperCfg) -> None:
         super().__init__()
 
@@ -123,7 +124,7 @@ class ArmDriverWrapper:
         while not rospy.is_shutdown():
             if self.is_arm_joint_position_target_initialized and self.is_curr_qpos_initialized:
                 with self.lock:
-                    delta_q = np.clip(self.arm_joint_position_target - self.curr_qpos[:-1], a_min=-0.2, a_max=0.2)
+                    delta_q = np.clip(self.arm_joint_position_target - self.curr_qpos[:-1], a_min=-self.JOINT_MAX_DELTA, a_max=self.JOINT_MAX_DELTA)
                     q_target = self.curr_qpos[:-1] + delta_q
 
                 joint_target = JointState()
@@ -153,13 +154,24 @@ class ArmDriverWrapper:
 
         q_solution_torch = self.curobo_robot_wrapper.inverseKinematics(target_translation_torch, target_quaternion_torch)
         if len(q_solution_torch) > 0:
-            q_solution = q_solution_torch.cpu().numpy()[0]
+            q_solution = q_solution_torch.cpu().numpy()
 
             with self.lock:
+                if len(q_solution) > 1:
+                    error = np.sum((q_solution - self.curr_qpos[:-1][np.newaxis]) ** 2, axis=1)
+                    best_index = np.argmin(error)
+                    best_q_solution = q_solution[best_index]
+                else:
+                    best_q_solution = q_solution[0]
+
                 self.is_arm_joint_position_target_initialized = True
-                self.arm_joint_position_target[:] = q_solution[:]
-            
-            return True, q_solution
+                self.arm_joint_position_target[:] = best_q_solution[:]
+                
+                # 对动作进行截断
+                delta_qpos = np.clip(best_q_solution - self.curr_qpos[:-1], a_min=-self.JOINT_MAX_DELTA, a_max=self.JOINT_MAX_DELTA)
+                action = self.curr_qpos[:-1] + delta_qpos
+
+            return True, action
         else:
             return False, None
 
