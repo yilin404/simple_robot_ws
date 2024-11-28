@@ -28,7 +28,7 @@ def main():
                                                                                                        arm_joint_position_control_topic_name=rospy.get_param("~arm_joint_position_control_topic_name"),
                                                                                                        gripper_joint_position_control_topic_name=rospy.get_param("~gripper_joint_position_control_topic_name")),
                                                                 ee_position_initial=np.array([0., 0.2, 0.3], dtype=np.float32),
-                                                                ee_quaternion_initial=R.from_quat(np.array([0.707, 0.707, 0., 0.], dtype=np.float32)),
+                                                                ee_rotation_initial=R.from_quat(np.array([0.707, 0.707, 0., 0.], dtype=np.float32)),
                                                                 delta_position_scale=1.5)
     wrist_pose_tracker_wrapper = WristPoseTrackerWrapper(cfg=wrist_pose_tracker_wrapper_cfg)
     wrist_pose_filter = False

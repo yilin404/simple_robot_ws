@@ -4,7 +4,7 @@
     <arg name="arm_joint_position_control_topic_name" default="/arm_joint_target_position"/>
     <arg name="gripper_joint_position_control_topic_name" default="/gripper_position_control_host"/>
 
-    <arg name="pretrained_policy_path" default="/home/yilin/simple_robot_ws/outputs/train/2024-11-26/22-29-51_real_world_act_default/checkpoints/last/pretrained_model" />
+    <arg name="pretrained_policy_path" default="/home/yilin/simple_robot_ws/outputs/train/2024-11-27/23-32-32_real_world_act_default/checkpoints/last/pretrained_model" />
 
     <node name="infer_lerobot" pkg="simple_hand_teleop" type="infer_lerobot.py" output="screen">
         <param name="joint_state_topic_name" value="$(arg joint_state_topic_name)" />

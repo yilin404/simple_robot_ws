@@ -30,7 +30,7 @@ seed: 100000
 video_backend: pyav
 
 wandb:
-  enable: false
+  enable: true
   # Set to true to disable saving an artifact despite save_checkpoint == True
   disable_artifact: false
   project: lerobot

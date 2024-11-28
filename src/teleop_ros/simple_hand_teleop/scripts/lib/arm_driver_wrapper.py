@@ -146,7 +146,7 @@ class ArmDriverWrapper:
                             arm_ee_quaternion: np.ndarray # [4,] # xyzw format
                             ) -> Tuple[bool, Optional[np.ndarray]]:
         target_translation = np.expand_dims(arm_ee_position, axis=0).astype(np.float32)
-        target_quaternion = np.expand_dims(np.array([arm_ee_quaternion[-1], *arm_ee_quaternion[:-1]]), axis=0).astype(np.float32)
+        target_quaternion = np.expand_dims(np.array([arm_ee_quaternion[-1], *arm_ee_quaternion[:-1]]), axis=0).astype(np.float32) # wxyz format
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         target_translation_torch = torch.from_numpy(target_translation).to(device)
