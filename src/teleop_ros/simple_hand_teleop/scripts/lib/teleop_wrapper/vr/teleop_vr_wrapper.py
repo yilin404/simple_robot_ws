@@ -119,17 +119,18 @@ class TeleOpVRWrapper:
             time.sleep(0.01)
 
     def get_teleop_data(self):
-        with self.lock:
-            if self.initialized:
+        if self.initialized:
+            with self.lock:
                 return self.wrist_position.copy(), self.wrist_quaternion.copy(), self.hand_qpos.copy()
-            else:
-                return None, None, None
+        else:
+            return None, None, None
 
     @property
     def initialized(self):
-        return (self.is_wrist_position_initialized.value and
-                self.is_wrist_quaternion_initialized.value and
-                self.is_hand_qpos_initialized.value)
+        with self.lock:
+            return (self.is_wrist_position_initialized.value and
+                    self.is_wrist_quaternion_initialized.value and
+                    self.is_hand_qpos_initialized.value)
     
     def set_display_image(self, display_image: np.ndarray):
         with self.lock:

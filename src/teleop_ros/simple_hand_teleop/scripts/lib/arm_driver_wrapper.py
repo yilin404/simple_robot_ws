@@ -197,13 +197,14 @@ class ArmDriverWrapper:
     
     @property
     def initialized(self):
-        return (self.is_curr_qpos_initialized and 
-                self.is_curr_qvel_initialized and 
-                self.is_curr_torque_initialized)
+        with self.lock:
+            return (self.is_curr_qpos_initialized and 
+                    self.is_curr_qvel_initialized and 
+                    self.is_curr_torque_initialized)
 
     def get_arm_states(self):
-        with self.lock:
-            if self.initialized:
+        if self.initialized:
+            with self.lock:
                 return self.curr_qpos.copy(), self.curr_qvel.copy(), self.curr_torque.copy()
-            else:
-                return None, None, None
+        else:
+            return None, None, None

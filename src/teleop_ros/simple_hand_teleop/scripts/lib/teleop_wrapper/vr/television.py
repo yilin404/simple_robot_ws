@@ -52,18 +52,19 @@ class TeleVision:
 
     async def _on_hand_move(self, event: ClientEvent, session: VuerSession) -> None:
         try:
-            left = np.array(event.value["left"]).reshape(25, 16)
-            self.left_hand_array[:] = left[0] # [16,]
-            self.left_landmarks_array[:] = left[:, 12:15] # [25, 3]
+            with self.lock:
+                left = np.array(event.value["left"]).reshape(25, 16)
+                self.left_hand_array[:] = left[0] # [16,]
+                self.left_landmarks_array[:] = left[:, 12:15] # [25, 3]
 
-            right = np.array(event.value["right"]).reshape(25, 16)
-            self.right_hand_array[:] = right[0]
-            self.right_landmarks_array[:] = right[:, 12:15]
+                right = np.array(event.value["right"]).reshape(25, 16)
+                self.right_hand_array[:] = right[0]
+                self.right_landmarks_array[:] = right[:, 12:15]
 
-            self.is_left_hand_initialized.value = True
-            self.is_right_hand_initialized.value = True
-            self.is_left_landmarks_initialized.value = True
-            self.is_right_landmarks_initialized.value = True
+                self.is_left_hand_initialized.value = True
+                self.is_right_hand_initialized.value = True
+                self.is_left_landmarks_initialized.value = True
+                self.is_right_landmarks_initialized.value = True
         except:
             pass
 
@@ -115,8 +116,9 @@ class TeleVision:
                 return None
             
     @property
-    def intialized(self) -> Optional[np.ndarray]:
-        return (self.is_left_hand_initialized.value and 
-                self.is_right_hand_initialized.value and 
-                self.is_left_landmarks_initialized.value and 
-                self.is_right_landmarks_initialized.value)
+    def initialized(self) -> Optional[np.ndarray]:
+        with self.lock:
+            return (self.is_left_hand_initialized.value and 
+                    self.is_right_hand_initialized.value and 
+                    self.is_left_landmarks_initialized.value and 
+                    self.is_right_landmarks_initialized.value)
