@@ -72,14 +72,15 @@ class TeleVision:
         session.upsert @ Hands(stream=True, key="hands")
 
         while True:
-            session.upsert(ImageBackground(self.display_image_array,
-                                           format="jpeg",
-                                           quality=80,
-                                           key="background",
-                                           interpolate=True,
-                                           fixed=True,
-                                           distanceToCamera=1,
-                                           position=[0, 0, -3],), to="bgChildren")
+            with self.lock:
+                session.upsert(ImageBackground(self.display_image_array,
+                                               format="jpeg",
+                                               quality=80,
+                                               key="background",
+                                               interpolate=True,
+                                               fixed=True,
+                                               distanceToCamera=1,
+                                               position=[0, 0, -3],), to="bgChildren")
 
             await sleep(0.03)
 

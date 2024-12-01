@@ -71,7 +71,7 @@ class TeleOpVRWrapper:
         tv = TeleVision(self.display_image_array)
 
         while not rospy.is_shutdown():
-            if tv.intialized:
+            if tv.initialized:
                 # 获取手腕关节姿态, 以及手掌关键点位置
                 if hand_type == "Left":
                     assert 1 == 2, "Left hand control has not been finished...."
