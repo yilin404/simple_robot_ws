@@ -116,36 +116,3 @@ class CPinRobotWrapper:
             print(f"ERROR in convergence, plotting debug info.{e}")
 
             return np.zeros([0,], dtype=np.float64)
-
-if __name__ == "__main__":
-    urdf_filename = "/home/yilin/dataset/robot_description/a1arm_description/urdf/a1arm.urdf"
-    locked_joints = ["gripper1_axis", "gripper2_axis"]
-    ee_link = "arm_seg6"
-
-    cpin_robot_wrapper = CPinRobotWrapper(urdf_filename, locked_joints, ee_link)
-
-    q = np.array([0.0] * 6)
-    translation, quaternion = cpin_robot_wrapper.forwardKinematics(q)
-    print(f"Translation: {translation}, Quaternion: {quaternion}")
-
-    target_translation = np.array([0.0, 0.2, 0.3])
-    target_quaternion = np.array([0.707, 0.707, 0.0, 0.0])
-
-    import time
-    # Using Casadi to solve IK
-    start_time = time.time()
-    q_solution_casadi = cpin_robot_wrapper.inverseKinematics(target_translation, target_quaternion)
-    translation_sol, quaternion_sol = cpin_robot_wrapper.forwardKinematics(q_solution_casadi)
-    end_time = time.time()
-    print(f"q_solution (Casadi): {q_solution_casadi}")
-    print("Translation (Casadi):", translation_sol, quaternion_sol)
-    print(f"Inverse Kinematics (Casadi) computation time: {end_time - start_time} seconds")
-
-    # Using Casadi to solve IK
-    start_time = time.time()
-    q_solution_casadi = cpin_robot_wrapper.inverseKinematics(target_translation, target_quaternion, q)
-    translation_sol, quaternion_sol = cpin_robot_wrapper.forwardKinematics(q_solution_casadi)
-    end_time = time.time()
-    print(f"q_solution (Casadi): {q_solution_casadi}")
-    print("Translation (Casadi):", translation_sol, quaternion_sol)
-    print(f"Inverse Kinematics (Casadi) computation time: {end_time - start_time} seconds")
