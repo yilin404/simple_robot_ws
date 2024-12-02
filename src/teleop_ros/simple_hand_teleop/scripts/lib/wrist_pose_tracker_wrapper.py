@@ -57,7 +57,7 @@ class WristPoseTrackerWrapper:
             ee_quaternion = ee_rot.as_quat() # xyzw format
 
             # 调用 末端位姿控制 服务
-            success, arm_qpos_target = self.driver_wrapper.command_arm_ee_pose(ee_position, ee_quaternion, use_initial_guess=True)
+            success, arm_qpos_target = self.driver_wrapper.command_arm_ee_pose(ee_position, ee_quaternion)
 
             # 调用 夹爪位置控制 服务
             self.driver_wrapper.command_gripper_joint_position(hand_qpos[-1])
