@@ -3,7 +3,6 @@ from sensor_msgs.msg import JointState
 from a1arm_utils.msg import gripper_position_control
 
 import numpy as np
-import torch
 
 import math
 import time
