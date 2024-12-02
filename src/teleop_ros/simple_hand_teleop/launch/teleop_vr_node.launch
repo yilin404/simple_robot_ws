@@ -3,7 +3,7 @@
     <arg name="retarget_config_path" default="$(find simple_hand_teleop)/configs/dex_retargeting/a1arm_gripper_teleop_vr.yml"/>
 
     <arg name="joint_state_topic_name" default="/joint_states_host" />
-    <arg name="curobo_config_file_path" default="/home/yilin/dataset/robot_description/a1arm_description/a1arm.yml" />
+    <arg name="urdf_file_path" default="/home/yilin/dataset/robot_description/a1arm_description/urdf/a1arm.urdf" />
     <arg name="arm_joint_position_control_topic_name" default="/arm_joint_target_position"/>
     <arg name="gripper_joint_position_control_topic_name" default="/gripper_position_control_host"/>
 
@@ -14,7 +14,7 @@
         <param name="retarget_config_path" value="$(arg retarget_config_path)" />
 
         <param name="joint_state_topic_name" value="$(arg joint_state_topic_name)" />
-        <param name="curobo_config_file_path" value="$(arg curobo_config_file_path)" />
+        <param name="urdf_file_path" value="$(arg urdf_file_path)" />
         <param name="arm_joint_position_control_topic_name" value="$(arg arm_joint_position_control_topic_name)" />
         <param name="gripper_joint_position_control_topic_name" value="$(arg gripper_joint_position_control_topic_name)" />
 

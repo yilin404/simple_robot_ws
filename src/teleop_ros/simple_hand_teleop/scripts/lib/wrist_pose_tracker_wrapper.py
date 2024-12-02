@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from .arm_driver_wrapper import ArmDriverWrapper, ArmDriverWrapperCfg
+from .driver.arm.arm_driver_wrapper import ArmDriverWrapper, ArmDriverWrapperCfg
 
 from dataclasses import dataclass
 from typing import Tuple

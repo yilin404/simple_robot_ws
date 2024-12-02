@@ -8,7 +8,7 @@ from scipy.spatial.transform import Rotation as R
 from scipy.spatial.transform import Slerp
 
 from lib.teleop_wrapper.rgbd.teleop_rgbd_wrapper import TeleOpRGBDWrapper, TeleOpRGBDWrapperCfg
-from lib.arm_driver_wrapper import ArmDriverWrapperCfg
+from lib.driver.arm.arm_driver_wrapper import ArmDriverWrapperCfg
 from lib.wrist_pose_tracker_wrapper import WristPoseTrackerWrapper, WristPoseTrackerWrapperCfg
 from lib.realsense_wrapper import RealSenseWrapper, RealSenseWrapperCfg
 from lib.episode_writer import EpisodeWriter
@@ -24,7 +24,7 @@ def main():
     teleop_wrapper = TeleOpRGBDWrapper(cfg=teleop_wrapper_cfg)
 
     wrist_pose_tracker_wrapper_cfg = WristPoseTrackerWrapperCfg(driver_wrapper_cfg=ArmDriverWrapperCfg(joint_state_topic_name=rospy.get_param("~joint_state_topic_name"),
-                                                                                                       curobo_config_file_path=rospy.get_param("~curobo_config_file_path"),
+                                                                                                       urdf_file_path=rospy.get_param("~urdf_file_path"),
                                                                                                        arm_joint_position_control_topic_name=rospy.get_param("~arm_joint_position_control_topic_name"),
                                                                                                        gripper_joint_position_control_topic_name=rospy.get_param("~gripper_joint_position_control_topic_name")),
                                                                 ee_position_initial=np.array([0., 0.2, 0.3], dtype=np.float32),

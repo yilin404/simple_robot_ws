@@ -5,77 +5,14 @@ from a1arm_utils.msg import gripper_position_control
 import numpy as np
 import torch
 
-# cuRobo
-from curobo.types.base import TensorDeviceType
-from curobo.types.math import Pose
-from curobo.types.robot import RobotConfig
-from curobo.util_file import load_yaml
-from curobo.wrap.reacher.ik_solver import IKSolver, IKSolverConfig
-
 import math
 import time
 from threading import Thread, Lock
 
+from .cpin_robot_wrapper import CPinRobotWrapper
+
 from dataclasses import dataclass
 from typing import Optional, Sequence, Tuple
-
-class CuroboRobotWrapper:
-    def __init__(self, config_file_path: str, enable_self_collision_check: bool) -> None:
-        super().__init__()
-
-        tensor_args = TensorDeviceType()
-        config_file = load_yaml(config_file_path)
-        if enable_self_collision_check:
-            robot_cfg = RobotConfig.from_dict(config_file["robot_cfg"])
-
-            ik_config = IKSolverConfig.load_from_robot_config(
-                robot_cfg,
-                None,
-                rotation_threshold=0.05,
-                position_threshold=0.005,
-                num_seeds=20,
-                self_collision_check=True,
-                self_collision_opt=True,
-                tensor_args=tensor_args,
-                use_cuda_graph=True,
-            )
-        else:
-            urdf_file = config_file["robot_cfg"]["kinematics"]["urdf_path"]
-            base_link = config_file["robot_cfg"]["kinematics"]["base_link"]
-            ee_link = config_file["robot_cfg"]["kinematics"]["ee_link"]
-            robot_cfg = RobotConfig.from_basic(urdf_file, base_link, ee_link, tensor_args)
-
-            ik_config = IKSolverConfig.load_from_robot_config(
-                robot_cfg,
-                None,
-                rotation_threshold=0.05,
-                position_threshold=0.005,
-                num_seeds=20,
-                self_collision_check=False,
-                self_collision_opt=False,
-                tensor_args=tensor_args,
-                use_cuda_graph=True,
-            )
-        
-        self.ik_solver = IKSolver(ik_config)
-    
-    def forwardKinematics(self, 
-                          q: torch.Tensor # [b, num_joints]
-                          ) -> Pose:
-        kin_state = self.ik_solver.fk(q)
-
-        return Pose(kin_state.ee_position, kin_state.ee_quaternion)
-    
-    def inverseKinematics(self,
-                          target_translation: torch.Tensor, # [b, 3] 
-                          target_quaternion: torch.Tensor, # [b, 4]
-                          ) -> torch.Tensor:
-        goal = Pose(target_translation, target_quaternion)
-        result = self.ik_solver.solve_batch(goal) # wxyz format
-
-        q_solution = result.solution[result.success]
-
-        return q_solution
 
 @dataclass
 class ArmDriverWrapperCfg:
@@ -83,7 +20,8 @@ class ArmDriverWrapperCfg:
     joint_state_topic_name: str
 
     # 机械臂控制
-    curobo_config_file_path: str
+    # curobo_config_file_path: str
+    urdf_file_path: str
     arm_joint_position_control_topic_name: str
     gripper_joint_position_control_topic_name: str
 
@@ -93,8 +31,9 @@ class ArmDriverWrapper:
         super().__init__()
 
         # 机械臂末端控制
-        self.curobo_robot_wrapper = CuroboRobotWrapper(cfg.curobo_config_file_path,
-                                                       enable_self_collision_check=False)
+        self.cpin_robot_wrapper = CPinRobotWrapper(urdf_filename=cfg.urdf_file_path,
+                                                   locked_joints=["gripper1_axis", "gripper2_axis"],
+                                                   ee_link="arm_seg6")
 
         # 机械臂夹爪位置控制
         self.GripperPositionControlPub = rospy.Publisher(cfg.gripper_joint_position_control_topic_name, gripper_position_control, queue_size=100)
@@ -145,30 +84,18 @@ class ArmDriverWrapper:
                             arm_ee_position: np.ndarray, # [3,]
                             arm_ee_quaternion: np.ndarray # [4,] # xyzw format
                             ) -> Tuple[bool, Optional[np.ndarray]]:
-        target_translation = np.expand_dims(arm_ee_position, axis=0).astype(np.float32)
-        target_quaternion = np.expand_dims(np.array([arm_ee_quaternion[-1], *arm_ee_quaternion[:-1]]), axis=0).astype(np.float32) # wxyz format
-
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        target_translation_torch = torch.from_numpy(target_translation).to(device)
-        target_quaternion_torch = torch.from_numpy(target_quaternion).to(device)
-
-        q_solution_torch = self.curobo_robot_wrapper.inverseKinematics(target_translation_torch, target_quaternion_torch)
-        if len(q_solution_torch) > 0:
-            q_solution = q_solution_torch.cpu().numpy()
-
+        with self.lock:
+            qpos_curr = self.curr_qpos[:-1].copy()
+        q_solution = self.cpin_robot_wrapper.inverseKinematics(target_translation=arm_ee_position,
+                                                               target_quaternion=arm_ee_quaternion,
+                                                               initial_guess=qpos_curr)
+        if len(q_solution) > 0:
             with self.lock:
-                if len(q_solution) > 1:
-                    error = np.sum((q_solution - self.curr_qpos[:-1][np.newaxis]) ** 2, axis=1)
-                    best_index = np.argmin(error)
-                    best_q_solution = q_solution[best_index]
-                else:
-                    best_q_solution = q_solution[0]
-
                 self.is_arm_joint_position_target_initialized = True
-                self.arm_joint_position_target[:] = best_q_solution[:]
+                self.arm_joint_position_target[:] = q_solution[:]
                 
                 # 对动作进行截断
-                delta_qpos = np.clip(best_q_solution - self.curr_qpos[:-1], a_min=-self.JOINT_MAX_DELTA, a_max=self.JOINT_MAX_DELTA)
+                delta_qpos = np.clip(q_solution - self.curr_qpos[:-1], a_min=-self.JOINT_MAX_DELTA, a_max=self.JOINT_MAX_DELTA)
                 action = self.curr_qpos[:-1] + delta_qpos
 
             return True, action

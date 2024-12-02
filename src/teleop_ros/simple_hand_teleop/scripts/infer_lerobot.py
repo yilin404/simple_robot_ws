@@ -12,7 +12,7 @@ import time
 from lerobot.common.policies.diffusion.modeling_diffusion import DiffusionPolicy
 from lerobot.common.policies.act.modeling_act import ACTPolicy
 
-from lib.arm_driver_wrapper import ArmDriverWrapper, ArmDriverWrapperCfg
+from lib.driver.arm.arm_driver_wrapper import ArmDriverWrapper, ArmDriverWrapperCfg
 from lib.realsense_wrapper import RealSenseWrapper, RealSenseWrapperCfg
 
 def main():
@@ -37,6 +37,7 @@ def main():
     # policy = DiffusionPolicy.from_pretrained(rospy.get_param("~pretrained_policy_path"))
     policy = ACTPolicy.from_pretrained(rospy.get_param("~pretrained_policy_path"))
     policy.to(policy_device)
+    policy.eval()
     policy.reset()
 
     while not rospy.is_shutdown():
@@ -92,7 +93,7 @@ def main():
             time.sleep(3.)
                     
             controlling = True
-            print("==> End controlling...")
+            print("==> Start controlling...")
         else:
             pass
 
