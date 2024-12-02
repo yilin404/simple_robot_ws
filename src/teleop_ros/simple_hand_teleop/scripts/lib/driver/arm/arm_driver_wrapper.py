@@ -82,13 +82,18 @@ class ArmDriverWrapper:
 
     def command_arm_ee_pose(self, 
                             arm_ee_position: np.ndarray, # [3,]
-                            arm_ee_quaternion: np.ndarray # [4,] # xyzw format
-                            ) -> Tuple[bool, Optional[np.ndarray]]:
-        with self.lock:
-            qpos_curr = self.curr_qpos[:-1].copy()
-        q_solution = self.cpin_robot_wrapper.inverseKinematics(target_translation=arm_ee_position,
-                                                               target_quaternion=arm_ee_quaternion,
-                                                               initial_guess=qpos_curr)
+                            arm_ee_quaternion: np.ndarray, # [4,] # xyzw format
+                            use_initial_guess: bool = False) -> Tuple[bool, Optional[np.ndarray]]:
+        if use_initial_guess:
+            with self.lock:
+                qpos_curr = self.curr_qpos[:-1].copy()
+            q_solution = self.cpin_robot_wrapper.inverseKinematics(target_translation=arm_ee_position,
+                                                                target_quaternion=arm_ee_quaternion,
+                                                                initial_guess=qpos_curr)
+        else:
+            q_solution = self.cpin_robot_wrapper.inverseKinematics(target_translation=arm_ee_position,
+                                                                   target_quaternion=arm_ee_quaternion)
+
         if len(q_solution) > 0:
             with self.lock:
                 self.is_arm_joint_position_target_initialized = True
