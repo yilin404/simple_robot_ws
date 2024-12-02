@@ -86,10 +86,10 @@ class ArmDriverWrapper:
                             use_initial_guess: bool = False) -> Tuple[bool, Optional[np.ndarray]]:
         if use_initial_guess:
             with self.lock:
-                qpos_curr = self.curr_qpos[:-1].copy()
+                initial_guess = self.curr_qpos[:-1].copy()
             q_solution = self.cpin_robot_wrapper.inverseKinematics(target_translation=arm_ee_position,
-                                                                target_quaternion=arm_ee_quaternion,
-                                                                initial_guess=qpos_curr)
+                                                                   target_quaternion=arm_ee_quaternion,
+                                                                   initial_guess=initial_guess)
         else:
             q_solution = self.cpin_robot_wrapper.inverseKinematics(target_translation=arm_ee_position,
                                                                    target_quaternion=arm_ee_quaternion)
