@@ -20,7 +20,7 @@ def main():
     rospy.loginfo("==> Start Infer Lerobot node...")
     
     driver_wrapper_cfg = ArmDriverWrapperCfg(joint_state_topic_name=rospy.get_param("~joint_state_topic_name"),
-                                             curobo_config_file_path=rospy.get_param("~curobo_config_file_path"),
+                                             urdf_file_path=rospy.get_param("~urdf_file_path"),
                                              arm_joint_position_control_topic_name=rospy.get_param("~arm_joint_position_control_topic_name"),
                                              gripper_joint_position_control_topic_name=rospy.get_param("~gripper_joint_position_control_topic_name"))
     driver_wrapper = ArmDriverWrapper(cfg=driver_wrapper_cfg)
@@ -79,16 +79,17 @@ def main():
         cv2.imshow("realsense_image", cv2.hconcat(color_images))
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
-            driver_wrapper.command_arm_ee_pose(arm_ee_position=np.array([0., 0.2, 0.3], dtype=np.float32),
-                                               arm_ee_quaternion=np.array([0.707, 0.707, 0., 0.], dtype=np.float32))
+            driver_wrapper.command_arm_ee_pose(arm_ee_position=np.array([0., 0.2, 0.3], dtype=np.float64),
+                                               arm_ee_quaternion=np.array([0.707, 0.707, 0., 0.], dtype=np.float64))
             driver_wrapper.command_gripper_joint_position(0.03)
             time.sleep(3.)
-                    
+            
+            policy.reset()
             controlling = False
             print("==> End controlling...")
         elif key == ord('c'):
-            driver_wrapper.command_arm_ee_pose(arm_ee_position=np.array([0., 0.2, 0.3], dtype=np.float32),
-                                               arm_ee_quaternion=np.array([0.707, 0.707, 0., 0.], dtype=np.float32))
+            driver_wrapper.command_arm_ee_pose(arm_ee_position=np.array([0., 0.2, 0.3], dtype=np.float64),
+                                               arm_ee_quaternion=np.array([0.707, 0.707, 0., 0.], dtype=np.float64))
             driver_wrapper.command_gripper_joint_position(0.03)
             time.sleep(3.)
                     
