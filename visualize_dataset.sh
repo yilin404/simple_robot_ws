@@ -2,12 +2,14 @@
 
 REPO_ID="yilin404/pick_and_place"
 ROOT="/home/yilin/dataset/own_episode_data"
-OUTPUT_DIR="./outputs/visualize/2024-11-27"
+OUTPUT_DIR="./outputs/visualize/2024-12-02"
 BATCH_SIZE=8
 SAVE=1
+EVALUATE=0
+POLICY_MODEL_PATH="/home/yilin/simple_robot_ws/outputs/train/2024-11-27/23-32-32_real_world_act_default/checkpoints/last/pretrained_model"
 
 START_INDEX=0
-END_INDEX=59
+END_INDEX=109
 
 for EPISODE_INDEX in $(seq $START_INDEX $END_INDEX)
 do
@@ -18,6 +20,8 @@ do
         --root $ROOT \
         --output-dir $OUTPUT_DIR \
         --batch-size $BATCH_SIZE \
-        --save $SAVE
+        --save $SAVE \
+        --evaluate $EVALUATE \
+        --policy-model-path $POLICY_MODEL_PATH
 done
 
