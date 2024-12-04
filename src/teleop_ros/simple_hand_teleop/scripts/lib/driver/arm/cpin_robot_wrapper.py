@@ -96,8 +96,8 @@ class CPinRobotWrapper:
             self.opti.set_value(self.param_q_last, initial_guess)
             self.opti.set_value(self.param_alpha, 0.1)
         else:
-            self.opti.set_initial(self.var_q, np.zeros(self.reduced_robot.model.nq))
-            self.opti.set_value(self.param_q_last, np.zeros(self.reduced_robot.model.nq))
+            self.opti.set_initial(self.var_q, pin.neutral(self.reduced_robot))
+            self.opti.set_value(self.param_q_last, pin.neutral(self.reduced_robot))
             self.opti.set_value(self.param_alpha, 0.)
 
         target_Tf = np.eye(4)

@@ -75,7 +75,7 @@ def make_optimizer_and_scheduler(cfg, policy):
             optimizer_params_dicts, lr=cfg.training.lr, weight_decay=cfg.training.weight_decay
         )
         lr_scheduler = None
-    elif cfg.policy.name == "diffusion":
+    elif cfg.policy.name == "diffusion" or cfg.policy.name == "rdt":
         optimizer = torch.optim.Adam(
             policy.diffusion.parameters(),
             cfg.training.lr,

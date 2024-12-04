@@ -11,6 +11,7 @@ import time
 
 from lerobot.common.policies.diffusion.modeling_diffusion import DiffusionPolicy
 from lerobot.common.policies.act.modeling_act import ACTPolicy
+from lerobot.common.policies.rdt.modeling_rdt import RDTPolicy
 
 from lib.driver.arm.arm_driver_wrapper import ArmDriverWrapper, ArmDriverWrapperCfg
 from lib.realsense_wrapper import RealSenseWrapper, RealSenseWrapperCfg
@@ -35,7 +36,8 @@ def main():
     
     policy_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # policy = DiffusionPolicy.from_pretrained(rospy.get_param("~pretrained_policy_path"))
-    policy = ACTPolicy.from_pretrained(rospy.get_param("~pretrained_policy_path"))
+    # policy = ACTPolicy.from_pretrained(rospy.get_param("~pretrained_policy_path"))
+    policy = RDTPolicy.from_pretrained(rospy.get_param("~pretrained_policy_path"))
     policy.to(policy_device)
     policy.eval()
     policy.reset()
