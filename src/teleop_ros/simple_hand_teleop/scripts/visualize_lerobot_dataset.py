@@ -71,10 +71,13 @@ from typing import Iterator
 import numpy as np
 import rerun as rr
 import torch
+from torch.nn import functional as F
 import torch.utils.data
 import tqdm
 
 from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
+### add support of evaluate model ###
+from lerobot.common.policies.rdt.modeling_rdt import RDTPolicy
 
 
 class EpisodeSampler(torch.utils.data.Sampler):
@@ -110,6 +113,8 @@ def visualize_dataset(
     save: bool = False,
     root: Path | None = None,
     output_dir: Path | None = None,
+    evaluate: bool = False,
+    policy_model_path: str | None = None,
 ) -> Path | None:
     if save:
         assert (
@@ -144,6 +149,16 @@ def visualize_dataset(
     if mode == "distant":
         rr.serve(open_browser=False, web_port=web_port, ws_port=ws_port)
 
+    ### add support of evaluate model ###
+    if evaluate:
+        assert (
+            policy_model_path is not None
+        ), "Set a policy model path to evaluate on the dataset with `--policy-model-path path/to/model`."
+        policy = RDTPolicy.from_pretrained(policy_model_path)
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        policy.to(device)
+        policy.eval()
+
     logging.info("Logging to Rerun")
 
     for batch in tqdm.tqdm(dataloader, total=len(dataloader)):
@@ -175,6 +190,25 @@ def visualize_dataset(
 
             if "next.success" in batch:
                 rr.log("next.success", rr.Scalar(batch["next.success"][i].item()))
+
+            if evaluate:
+                with torch.no_grad():
+                    observation = {}
+
+                    for key in dataset.camera_keys:
+                        observation[key] = batch[key][i].unsqueeze(0).unsqueeze(0).to(device)
+                    observation["observation.state"] = batch["observation.state"][i].unsqueeze(0).unsqueeze(0).to(device)
+
+                    with torch.inference_mode():
+                        observation = policy.normalize_inputs(observation)
+                        if len(policy.expected_image_keys) > 0:
+                            observation = dict(observation)  # shallow copy so that adding a key doesn't modify the original
+                            observation["observation.images"] = torch.stack([observation[k] for k in policy.expected_image_keys], dim=-4)
+
+                            actions = policy.diffusion.generate_actions(observation)
+
+                            actions = policy.unnormalize_outputs({"action": actions})["action"]
+                rr.log("loss", rr.Scalar(F.l1_loss(actions[0][0], batch["action"][i].to(device), reduction="mean").item()))
 
     if mode == "local" and save:
         # save .rrd locally
@@ -264,6 +298,23 @@ def main():
             "Save a .rrd file in the directory provided by `--output-dir`. "
             "It also deactivates the spawning of a viewer. "
             "Visualize the data by running `rerun path/to/file.rrd` on your local machine."
+        ),
+    )
+    ### add support of evaluate model ###
+    parser.add_argument(
+        "--evaluate",
+        type=int,
+        default=0,
+        help=(
+            "Evaluate a model provided by `--policy-model-path` on the dataset. "
+        ),
+    )
+    parser.add_argument(
+        "--policy-model-path",
+        type=str,
+        default=None,
+        help=(
+            "Policy model path to evaluate on the dataset. "
         ),
     )
 
