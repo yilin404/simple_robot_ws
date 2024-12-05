@@ -1,7 +1,7 @@
 defaults:
   - _self_
   - env: a1arm_real
-  - policy: a1arm_real_dp
+  - policy: a1arm_real_rdt
 
 hydra:
   run:
@@ -9,7 +9,7 @@ hydra:
     # with the same value for `dir` its contents will be overwritten unless you set `resume` to true.
     dir: outputs/train/${now:%Y-%m-%d}/${now:%H-%M-%S}_${env.name}_${policy.name}_${hydra.job.name}
   job:
-    name: default
+    name: arm_real
 
 # Set `resume` to true to resume a previous run. In order for this to work, you will need to make sure
 # `hydra.run.dir` is the directory of an existing run with at least one checkpoint in it.
@@ -32,6 +32,6 @@ video_backend: pyav
 wandb:
   enable: true
   # Set to true to disable saving an artifact despite save_checkpoint == True
-  disable_artifact: false
-  project: lerobot-rdt
+  disable_artifact: true
+  project: lerobot-a1arm
   notes: ""

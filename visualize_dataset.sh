@@ -2,11 +2,11 @@
 
 REPO_ID="yilin404/pick_and_place"
 ROOT="/home/yilin/dataset/own_episode_data"
-OUTPUT_DIR="./outputs/visualize/2024-12-02"
+OUTPUT_DIR="./outputs/visualize/2024-12-05"
 BATCH_SIZE=8
 SAVE=1
-EVALUATE=0
-POLICY_MODEL_PATH="/home/yilin/simple_robot_ws/outputs/train/2024-11-27/23-32-32_real_world_act_default/checkpoints/last/pretrained_model"
+EVALUATE=1
+POLICY_MODEL_PATH="/home/yilin/simple_robot_ws/outputs/train/2024-12-04/21-57-10_real_world_rdt_default/checkpoints/last/pretrained_model"
 
 START_INDEX=0
 END_INDEX=109

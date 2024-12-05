@@ -137,7 +137,7 @@ policy:
   beta_schedule: squaredcos_cap_v2
   beta_start: 0.0001
   beta_end: 0.02
-  prediction_type: epsilon # epsilon / sample
+  prediction_type: sample # epsilon / sample
   clip_sample: True
   clip_sample_range: 1.0
 
